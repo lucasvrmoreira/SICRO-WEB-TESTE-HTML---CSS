@@ -92,12 +92,13 @@ def saldo():
             roupas_por_tipo[tipo] = []
 
         roupas_por_tipo[tipo].append({
-            'tamanho': r[2] or '-',
-            'lote': r[4] or '-',
-            'validade': r[5].strftime('%d/%m/%Y') if r[5] else '-',
-            'quantidade': r[3] or 0,
-            'data_entrada': r[6].strftime('%d/%m/%Y %H:%M') if r[6] else '-'
-        })
+    'tamanho': r[2] or '-',
+    'lote': r[4] or '-',
+    'validade': r[5].strftime('%d/%m/%Y') if r[5] else '-',
+    'quantidade': r[6] or 0,
+    'data_entrada': r[7].strftime('%d/%m/%Y %H:%M') if r[7] else '-'
+})
+
 
     conn.close()
     return render_template('saldo.html', roupas_por_tipo=roupas_por_tipo)
