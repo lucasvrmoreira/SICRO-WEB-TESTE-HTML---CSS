@@ -81,10 +81,20 @@ def saida():
 def saldo():
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute('SELECT * FROM roupas ORDER BY tipo, tamanho')
+
+    c.execute('SELECT * FROM roupas')
     roupas = c.fetchall()
+
+    roupas_por_tipo = {}
+    for r in roupas:
+        tipo = r[1]
+        if tipo not in roupas_por_tipo:
+            roupas_por_tipo[tipo] = []
+        roupas_por_tipo[tipo].append(r)
+
     conn.close()
-    return render_template('saldo.html', roupas=roupas)
+    return render_template('saldo.html', roupas_por_tipo=roupas_por_tipo)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
