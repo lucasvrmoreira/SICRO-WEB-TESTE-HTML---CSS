@@ -33,7 +33,7 @@ def init_db():
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS roupas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             tipo TEXT NOT NULL,
             categoria TEXT NOT NULL,
             tamanho TEXT NOT NULL,
