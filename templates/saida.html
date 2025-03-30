@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="text-center text-primary mb-4">Saída de Roupas</h2>
+<p class="text-center text-muted mb-4">Selecione os tipos de roupas acima, escolha os lotes e veja os itens escolhidos à direita antes de confirmar.</p>
+
+<div class="d-flex flex-wrap justify-content-center mb-4 gap-2">
+    {% for tipo in roupas_por_tipo.keys() %}
+    <button class="btn btn-outline-secondary shadow-sm fw-semibold" onclick="mostrarLotes('{{ tipo }}')">
+        <i class="bi bi-tag me-1"></i> {{ tipo | title }}
+    </button>
+    {% endfor %}
+</div>
+
+<div class="row">
+    <!-- Lotes -->
+    <div class="col-md-5">
+        <h5 id="titulo-lote" class="text-secondary mb-3">Clique em um tipo acima</h5>
+        <div id="lotes-container" class="bg-light p-3 rounded shadow-sm border"></div>
+    </div>
+
+    <!-- Selecionados -->
+    <div class="col-md-7">
+        <h5 class="text-secondary mb-3">Roupas Selecionadas</h5>
+        <form method="post" id="saida-form">
+            <div id="selecionados-container" class="bg-light p-3 rounded shadow-sm border mb-3" style="min-height: 200px;">
+                <p class="text-muted">Nada selecionado ainda.</p>
+            </div>
+            <button type="submit" class="btn btn-danger w-100 py-2 fw-bold">
+                <i class="bi bi-check-circle me-2"></i> Confirmar Saída
+            </button>
+        </form>
+        <a href="/" class="btn btn-outline-secondary w-100 mt-3">
+            <i class="bi bi-arrow-left-circle me-1"></i> Voltar ao Início
+        </a>
+    </div>
+</div>
+
+<script type="text/javascript">
+    const roupas = JSON.parse('{{ roupas_por_tipo | tojson | safe }}');
+    const selecionados = {};
+
+    function mostrarLotes(tipo) {
+        const container = document.getElementById("lotes-container");
+        const titulo = document.getElementById("titulo-lote");
+        titulo.innerText = "Lotes disponíveis para: " + tipo;
+
+        let html = '';
+
+        roupas[tipo].forEach(function(r) {
+            const id = r[0];
+            const tamanho = r[3];
+            const lote = r[4] || '-';
+            const validade = r[5] || '-';
+            const qtd = r[6];
+
+            html += `
+                <div class="card mb-3 shadow-sm border-0">
+                    <div class="card-body bg-white rounded">
+                        <strong>${tipo}</strong> | Tam: ${tamanho} | Lote: ${lote} | Val: ${validade} | Qtd: <span class="badge bg-success">${qtd}</span>
+                        <div class="input-group mt-2">
+                            <input type="number" class="form-control" id="qtd_${id}" min="0" max="${qtd}" placeholder="Qtd a sair">
+                            <button class="btn btn-outline-primary" type="button" onclick="adicionarItem(${id}, '${tipo}', '${tamanho}', '${lote}', '${validade}', ${qtd})">
+                                <i class="bi bi-plus-circle"></i> Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function adicionarItem(id, tipo, tamanho, lote, validade, max) {
+        const qtd = parseInt(document.getElementById(`qtd_${id}`).value);
+        if (!qtd || qtd <= 0) {
+            alert("Quantidade inválida. Deve ser maior que zero.");
+            return;
+        }
+
+        if (qtd > max) {
+            alert(`Quantidade maior que o disponível em estoque (${max}).`);
+            return;
+        }
+
+        selecionados[id] = {
+            id, tipo, tamanho, lote, validade, qtd, max
+        };
+
+        atualizarSelecionados();
+    }
+
+    function removerItem(id) {
+        delete selecionados[id];
+        atualizarSelecionados();
+    }
+
+    function atualizarSelecionados() {
+        const container = document.getElementById("selecionados-container");
+        container.innerHTML = '';
+
+        if (Object.keys(selecionados).length === 0) {
+            container.innerHTML = '<p class="text-muted">Nada selecionado ainda.</p>';
+            return;
+        }
+
+        for (const id in selecionados) {
+            const item = selecionados[id];
+            container.innerHTML += `
+                <div class="card mb-2 shadow-sm border-0">
+                    <div class="card-body bg-white d-flex justify-content-between align-items-center rounded">
+                        <div>
+                            <input type="hidden" name="selecionado" value="${item.id}">
+                            <input type="hidden" name="quantidade_${item.id}" value="${item.qtd}">
+                            <strong>${item.tipo}</strong> | Tam: ${item.tamanho} | Lote: ${item.lote} | Qtd: ${item.qtd}
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" type="button" onclick="removerItem(${item.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+</script>
+{% endblock %}
