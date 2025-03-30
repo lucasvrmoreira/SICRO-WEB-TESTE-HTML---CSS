@@ -2,62 +2,58 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="mb-4">Saldo de Roupas</h2>
-    <div class="row">
-        <div class="col-md-3">
-            <div class="list-group">
-                {% for tipo in roupas_por_tipo.keys() %}
-                    <button class="list-group-item list-group-item-action" onclick="mostrarRoupas('{{ tipo }}')">
-                        <i class="bi bi-tags"></i> {{ tipo }}
-                    </button>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="col-md-9">
-            <div id="detalhes-roupa"></div>
-        </div>
+  <h2 class="mb-4 fw-bold">Saldo de Roupas</h2>
+
+  <div class="row">
+    <div class="col-3">
+      <ul class="list-group">
+        {% for tipo in roupas_por_tipo.keys() %}
+        <li class="list-group-item">
+          <a class="text-decoration-none fw-medium" href="#{{ tipo | replace(' ', '_') }}">
+            <i class="bi bi-tag-fill"></i> {{ tipo }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
-    <a href="/" class="btn btn-outline-secondary mt-4"><i class="bi bi-arrow-left-circle"></i> Voltar ao Início</a>
+
+    <div class="col-9">
+      {% for tipo, itens in roupas_por_tipo.items() %}
+      <div id="{{ tipo | replace(' ', '_') }}" class="mb-5">
+        <h4 class="fw-semibold">Saldo de: {{ tipo }}</h4>
+        <table class="table table-bordered table-hover text-center align-middle">
+          <thead class="table-primary">
+            <tr>
+              <th>Tamanho</th>
+              <th>Lote</th>
+              <th>Validade</th>
+              <th>Quantidade</th>
+              <th>Data Entrada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in itens %}
+            <tr>
+              <td>{{ item.tamanho }}</td>
+              <td>{{ item.lote }}</td>
+              <td>{{ item.validade }}</td>
+              <td>
+                <span class="badge bg-success fs-6">{{ item.quantidade }}</span>
+              </td>
+              <td>{{ item.data_entrada }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="text-start mt-4">
+    <a href="/" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Voltar ao Início
+    </a>
+  </div>
 </div>
-
-<script>
-    const roupas = JSON.parse('{{ roupas_por_tipo | tojson | safe }}');
-
-    function mostrarRoupas(tipo) {
-        const detalhesDiv = document.getElementById('detalhes-roupa');
-        const lista = roupas[tipo];
-
-        let html = `
-            <h4 class="mt-3">Saldo de: ${tipo}</h4>
-            <table class="table table-bordered mt-2">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Tamanho</th>
-                        <th>Lote</th>
-                        <th>Validade</th>
-                        <th>Quantidade</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        lista.forEach(item => {
-            html += `
-                <tr>
-                    <td>${item.tamanho || '-'}</td>
-                    <td>${item.lote || '-'}</td>
-                    <td>${item.validade || '-'}</td>
-                    <td><span class="badge bg-success fs-6">${item.quantidade || 0}</span></td>
-                </tr>
-            `;
-        });
-
-        html += `
-                </tbody>
-            </table>
-        `;
-
-        detalhesDiv.innerHTML = html;
-    }
-</script>
 {% endblock %}

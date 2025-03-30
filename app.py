@@ -81,23 +81,25 @@ def saida():
 def saldo():
     conn = get_db_connection()
     c = conn.cursor()
-
-    c.execute('SELECT * FROM roupas')
+    c.execute("SELECT tipo, tamanho, categoria, lote, validade, quantidade, data_entrada FROM roupas ORDER BY tipo, tamanho")
     roupas = c.fetchall()
+    conn.close()
 
     roupas_por_tipo = {}
     for r in roupas:
-        tipo = r[1]
+        tipo = r[0]
         if tipo not in roupas_por_tipo:
             roupas_por_tipo[tipo] = []
-
         roupas_por_tipo[tipo].append({
-    'tamanho': r[2] or '-',
-    'lote': r[4] or '-',
-    'validade': r[5].strftime('%d/%m/%Y') if r[5] else '-',
-    'quantidade': r[6] or 0,
-    'data_entrada': r[7].strftime('%d/%m/%Y %H:%M') if r[7] else '-'
-})
+            'tamanho': r[1],
+            'categoria': r[2],
+            'lote': r[3] if r[3] else '-',
+            'validade': r[4].strftime('%d/%m/%Y') if r[4] else '-',
+            'quantidade': r[5],
+            'data_entrada': r[6].strftime('%d/%m/%Y') if r[6] else '-'
+        })
+
+    return render_template('saldo.html', roupas_por_tipo=roupas_por_tipo)
 
 
     conn.close()
