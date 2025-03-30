@@ -1,17 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for
 import psycopg2
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 
-# Conexão com o PostgreSQL da Render
-conn = psycopg2.connect(
-    host="dpg-cvkpk5t6ubrc73fshg00-a.oregon-postgres.render.com",
-    database="sicro_db",
-    user="sicro_user",
-    password="U4JVLkBlxC6YqmSzDN8hrtbgegXm1O4R"
-)
-c = conn.cursor()
+# Função para obter conexão segura com o banco
+def get_db_connection():
+    return psycopg2.connect(os.environ['DATABASE_URL'])
 
 @app.route('/')
 def index():
@@ -24,9 +20,12 @@ def entrada():
         tamanho = request.form['tamanho']
         categoria = request.form['categoria']
         quantidade = int(request.form['quantidade'])
-        lote = request.form['lote'] if categoria == 'estéril' else None
-        validade = request.form['validade'] if categoria == 'estéril' else None
+        lote = request.form['lote'] if categoria == 'estéril' and request.form['lote'] else None
+        validade = request.form['validade'] if categoria == 'estéril' and request.form['validade'] else None
         data_entrada = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        conn = get_db_connection()
+        c = conn.cursor()
 
         # Verifica se a roupa já existe
         c.execute('''
@@ -45,12 +44,16 @@ def entrada():
             ''', (tipo, tamanho, categoria, quantidade, lote, validade, data_entrada))
 
         conn.commit()
+        conn.close()
         return redirect(url_for('entrada'))
 
     return render_template('entrada.html')
 
 @app.route('/saida', methods=['GET', 'POST'])
 def saida():
+    conn = get_db_connection()
+    c = conn.cursor()
+
     if request.method == 'POST':
         id_roupa = int(request.form['id'])
         quantidade_saida = int(request.form['quantidade'])
@@ -64,18 +67,23 @@ def saida():
                 c.execute('DELETE FROM roupas WHERE id = %s', (id_roupa,))
             else:
                 c.execute('UPDATE roupas SET quantidade = %s WHERE id = %s', (nova_quantidade, id_roupa))
-            conn.commit()
 
+        conn.commit()
+        conn.close()
         return redirect(url_for('saida'))
 
     c.execute('SELECT * FROM roupas ORDER BY tipo, tamanho')
     roupas = c.fetchall()
+    conn.close()
     return render_template('saida.html', roupas=roupas)
 
 @app.route('/saldo')
 def saldo():
+    conn = get_db_connection()
+    c = conn.cursor()
     c.execute('SELECT * FROM roupas ORDER BY tipo, tamanho')
     roupas = c.fetchall()
+    conn.close()
     return render_template('saldo.html', roupas=roupas)
 
 if __name__ == '__main__':
