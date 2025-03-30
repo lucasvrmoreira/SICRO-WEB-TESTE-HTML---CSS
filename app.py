@@ -50,8 +50,9 @@ def entrada():
         estereis = ['macacao azul', 'bota azul', 'oculos', 'panos']
         categoria = 'estéril' if tipo.lower() in estereis else 'não estéril'
 
-        lote = request.form['lote'] if categoria == 'estéril' else None
-        validade = request.form['validade'] if categoria == 'estéril' else None
+        lote = request.form['lote'] if categoria == 'estéril' and request.form['lote'] else None
+        validade = request.form['validade'] if categoria == 'estéril' and request.form['validade'] else None
+
 
         conn = conectar_postgres()
         c = conn.cursor()
