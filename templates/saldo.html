@@ -1,35 +1,28 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<h2 class="text-center text-primary mb-4">Consulta de Saldo</h2>
-<p class="text-center text-muted mb-4">Clique em um tipo de roupa para visualizar os lotes em estoque.</p>
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Saldo de Roupas</h2>
 
-<div class="row">
-    <!-- Tipos -->
-    <div class="col-md-4">
-        <div class="list-group shadow-sm">
-            {% for tipo in roupas_por_tipo.keys() %}
-            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                    onclick="mostrarSaldo('{{ tipo }}')">
-                <span><i class="bi bi-tag me-2 text-secondary"></i>{{ tipo | title }}</span>
-                <i class="bi bi-chevron-right"></i>
-            </button>
-            {% endfor %}
+    <div class="row">
+        <div class="col-md-4">
+            <ul class="list-group">
+                {% for tipo in roupas_por_tipo.keys() %}
+                    <li class="list-group-item list-group-item-action" onclick="mostrarSaldo('{{ tipo }}')">
+                        {{ tipo }}
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
-    </div>
-
-    <!-- Saldo -->
-    <div class="col-md-8">
-        <h5 id="titulo-lote" class="text-secondary mb-3">Selecione um tipo para visualizar o saldo</h5>
-        <div id="saldo-container" class="bg-light p-3 rounded shadow-sm border mb-4"></div>
-
-        <a href="/" class="btn btn-outline-secondary w-100 mt-3">
-            <i class="bi bi-arrow-left-circle me-1"></i> Voltar ao Início
-        </a>
+        <div class="col-md-8">
+            <h4 id="titulo-lote" class="mb-3">Selecione um tipo de roupa para visualizar o saldo</h4>
+            <div id="saldo-container"></div>
+        </div>
     </div>
 </div>
 
-<script type="text/javascript">
-    const roupas = JSON.parse('{{ roupas_por_tipo | tojson | safe }}');
+<script>
+    const roupas = {{ roupas_por_tipo | tojson }};
 
     function mostrarSaldo(tipo) {
         const container = document.getElementById("saldo-container");
@@ -51,10 +44,10 @@
         `;
 
         roupas[tipo].forEach(function(r) {
-            const tamanho = r[3];
-            const lote = r[4] || '-';
-            const validade = r[5] || '-';
-            const qtd = r[6];
+            const tamanho = r[2];
+            const lote = r[5] || '-';
+            const validade = r[6] || '-';
+            const qtd = r[4];
 
             html += `
                 <tr class="text-center">
