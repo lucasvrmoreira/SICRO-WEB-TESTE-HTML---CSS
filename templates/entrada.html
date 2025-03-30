@@ -1,101 +1,51 @@
-{% extends 'base.html' %}
-{% block content %}
-<h2 class="text-center text-primary mb-4">Entrada de Roupas</h2>
-<p class="text-center text-muted mb-4">Preencha os dados para registrar a entrada de roupas no estoque.</p>
-
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-body bg-light rounded">
-                <form method="post" id="entrada-form">
-                    <div class="mb-3">
-                        <label for="tipo" class="form-label">Tipo de Roupa:</label>
-                        <select name="tipo" class="form-select" required onchange="ajustarCampos(this.value)">
-                            <option value="">Selecione...</option>
-                            <option value="Macacão Azul">Macacão Azul</option>
-                            <option value="Bota Azul">Bota Azul</option>
-                            <option value="Óculos">Óculos</option>
-                            <option value="Panos">Panos</option>
-                            <option value="Camisa">Camisa</option>
-                            <option value="Calça">Calça</option>
-                            <option value="Jaleco">Jaleco</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="tamanho" class="form-label">Tamanho:</label>
-                        <select name="tamanho" class="form-select" id="tamanho" required>
-                            <option value="">Selecione...</option>
-                            <option value="PP">PP</option>
-                            <option value="P">P</option>
-                            <option value="M">M</option>
-                            <option value="G">G</option>
-                            <option value="GG">GG</option>
-                            <option value="G3">G3</option>
-                            <option value="G4">G4</option>
-                            <option value="Padrão">Padrão</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="lote" class="form-label">Lote:</label>
-                        <input type="text" name="lote" class="form-control" id="lote">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="validade" class="form-label">Validade:</label>
-                        <input type="date" name="validade" class="form-control" id="validade">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="quantidade" class="form-label">Quantidade:</label>
-                        <input type="number" name="quantidade" class="form-control" required>
-                    </div>
-
-                    <button type="submit" class="btn btn-success w-100 fw-bold">
-                        <i class="bi bi-box-arrow-in-down me-1"></i> Registrar Entrada
-                    </button>
-                </form>
-
-                <a href="/" class="btn btn-outline-secondary w-100 mt-3">
-                    <i class="bi bi-arrow-left-circle me-1"></i> Voltar ao Início
-                </a>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Entrada de Roupas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Entrada de Roupas</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label for="tipo" class="form-label">Tipo:</label>
+                <input type="text" name="tipo" class="form-control" id="tipo" required>
             </div>
-        </div>
+
+            <div class="mb-3">
+                <label for="tamanho" class="form-label">Tamanho:</label>
+                <input type="text" name="tamanho" class="form-control" id="tamanho" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="categoria" class="form-label">Categoria:</label>
+                <select name="categoria" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    <option value="estéril">Estéril</option>
+                    <option value="não estéril">Não Estéril</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="quantidade" class="form-label">Quantidade:</label>
+                <input type="number" name="quantidade" class="form-control" id="quantidade" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="lote" class="form-label">Lote:</label>
+                <input type="text" name="lote" class="form-control" id="lote">
+            </div>
+
+            <div class="mb-3">
+                <label for="validade" class="form-label">Validade:</label>
+                <input type="date" name="validade" class="form-control" id="validade">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Registrar</button>
+            <a href="/" class="btn btn-secondary">Voltar</a>
+        </form>
     </div>
-</div>
-
-<script>
-function ajustarCampos(tipo) {
-    const tamanho = document.getElementById('tamanho');
-    const lote = document.getElementById('lote');
-    const validade = document.getElementById('validade');
-
-    if (tipo === 'Óculos' || tipo === 'Panos') {
-        tamanho.value = 'Padrão';
-        tamanho.disabled = true;
-    } else {
-        tamanho.disabled = false;
-    }
-
-    if (tipo === 'Camisa' || tipo === 'Calça' || tipo === 'Jaleco') {
-        lote.disabled = true;
-        validade.disabled = true;
-        lote.value = '';
-        validade.value = '';
-    } else {
-        lote.disabled = false;
-        validade.disabled = false;
-    }
-}
-
-// Validação de quantidade > 0
-document.getElementById('entrada-form').addEventListener('submit', function (e) {
-    const qtd = parseInt(document.querySelector("input[name='quantidade']").value);
-    if (!qtd || qtd <= 0) {
-        e.preventDefault();
-        alert("A quantidade deve ser maior que zero.");
-    }
-});
-</script>
-{% endblock %}
+</body>
+</html>
