@@ -8,7 +8,21 @@
         function ajustarCampos() {
             const tipo = document.getElementById('tipo').value;
             const tamanho = document.getElementById('tamanho');
-            
+            const categoria = document.getElementById('categoria');
+
+            // Definições de categoria automática
+            const esteril = ["Macacão Azul", "Bota Azul", "Óculos", "Panos"];
+            const naoEsteril = ["Camisa", "Calça", "Jaleco"];
+
+            if (esteril.includes(tipo)) {
+                categoria.value = "Estéril";
+            } else if (naoEsteril.includes(tipo)) {
+                categoria.value = "Não Estéril";
+            } else {
+                categoria.value = "";
+            }
+
+            // Tamanho padrão automático
             if (tipo === 'Óculos' || tipo === 'Panos') {
                 tamanho.value = 'Padrão';
                 tamanho.disabled = true;
@@ -29,7 +43,6 @@
                 <option value="Bota Azul">Bota Azul</option>
                 <option value="Óculos">Óculos</option>
                 <option value="Panos">Panos</option>
-                <option value="Pijama">Pijama</option>
                 <option value="Jaleco">Jaleco</option>
                 <option value="Camisa">Camisa</option>
                 <option value="Calça">Calça</option>
