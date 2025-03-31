@@ -20,34 +20,41 @@ def entrada():
         tamanho = request.form['tamanho']
         categoria = request.form['categoria']
         quantidade = int(request.form['quantidade'])
-        lote = request.form['lote'] if categoria == 'estéril' and request.form['lote'] else None
-        validade = request.form['validade'] if categoria == 'estéril' and request.form['validade'] else None
-        data_entrada = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        lote = request.form['lote']
+        validade_str = request.form['validade']
+        validade = datetime.strptime(validade_str, '%d/%m/%Y').date() if validade_str else None
+        data_entrada = datetime.now().date()
 
         conn = get_db_connection()
         c = conn.cursor()
 
-        # Verifica se a roupa já existe
+        # Verifica se já existe uma roupa com os mesmos dados
         c.execute('''
-            SELECT id FROM roupas WHERE tipo=%s AND tamanho=%s AND lote=%s AND validade=%s
-        ''', (tipo, tamanho, lote, validade))
-        result = c.fetchone()
+            SELECT id FROM roupas
+            WHERE tipo = %s AND tamanho = %s AND categoria = %s AND lote = %s AND validade = %s
+        ''', (tipo, tamanho, categoria, lote, validade))
+        existente = c.fetchone()
 
-        if result:
+        if existente:
+            # Se já existe, apenas atualiza a quantidade
             c.execute('''
-                UPDATE roupas SET quantidade = quantidade + %s WHERE id = %s
-            ''', (quantidade, result[0]))
+                UPDATE roupas
+                SET quantidade = quantidade + %s
+                WHERE id = %s
+            ''', (quantidade, existente[0]))
         else:
+            # Caso contrário, insere nova linha
             c.execute('''
-                INSERT INTO roupas (tipo, tamanho, categoria, quantidade, lote, validade, data_entrada)
+                INSERT INTO roupas (tipo, tamanho, categoria, lote, validade, quantidade, data_entrada)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ''', (tipo, tamanho, categoria, quantidade, lote, validade, data_entrada))
+            ''', (tipo, tamanho, categoria, lote, validade, quantidade, data_entrada))
 
         conn.commit()
         conn.close()
-        return redirect(url_for('entrada'))
+        return redirect('/')
 
     return render_template('entrada.html')
+
 
 @app.route('/saida', methods=['GET', 'POST'])
 def saida():
