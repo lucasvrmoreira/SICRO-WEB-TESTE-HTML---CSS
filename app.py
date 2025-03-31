@@ -71,13 +71,15 @@ def saida():
             roupas_por_tipo[tipo] = []
         roupas_por_tipo[tipo].append({
             'id': r[0],
+            'tipo': r[1],
             'tamanho': r[2],
             'lote': r[3] or '-',
             'validade': r[4].strftime('%d/%m/%Y') if r[4] else '-',
             'quantidade': r[5]
         })
 
-    return render_template('saida.html', roupas_por_tipo=roupas_por_tipo)
+    return render_template('saida.html', roupas_por_tipo=roupas_por_tipo, roupas=roupas_por_tipo)
+
 
 
 @app.route('/saldo')
