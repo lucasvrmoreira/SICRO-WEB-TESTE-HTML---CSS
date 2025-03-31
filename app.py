@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import psycopg2
 from datetime import datetime
 import os
+import json
 
 
 app = Flask(__name__)
@@ -112,29 +113,31 @@ def saldo():
 
 @app.route('/confirmar_saida', methods=['POST'])
 def confirmar_saida():
-    itens = request.form.get('itens')
-    if itens:
-        import json
-        roupas = json.loads(itens)
+    itens = json.loads(request.form['itens'])
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-        conn = get_db_connection()
-        c = conn.cursor()
+    for item in itens:
+        cur.execute("""
+            SELECT quantidade FROM roupas
+            WHERE id = %s
+        """, (item['id'],))
+        atual = cur.fetchone()
 
-        for roupa in roupas:
-            # Atualiza a quantidade
-            c.execute('''
-                UPDATE roupas
-                SET quantidade = quantidade - %s
-                WHERE id = %s AND quantidade >= %s
-            ''', (roupa['quantidade'], roupa['id'], roupa['quantidade']))
+        if atual and atual[0] >= item['quantidade']:
+            nova_qtd = atual[0] - item['quantidade']
 
-        # Remove os registros que ficaram com quantidade 0
-        c.execute("DELETE FROM roupas WHERE quantidade <= 0")
+            if nova_qtd == 0:
+                # Se zerou, remove o item do banco
+                cur.execute("DELETE FROM roupas WHERE id = %s", (item['id'],))
+            else:
+                # Senão, apenas atualiza a quantidade
+                cur.execute("UPDATE roupas SET quantidade = %s WHERE id = %s", (nova_qtd, item['id']))
 
-        conn.commit()
-        conn.close()
-
-    return redirect('/')
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('saida'))
 
 
 if __name__ == '__main__':
