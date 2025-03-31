@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import psycopg2
 from datetime import datetime
 import os
+from database import conectar # type: ignore
 
 app = Flask(__name__)
 
@@ -56,33 +57,28 @@ def entrada():
     return render_template('entrada.html')
 
 
-@app.route('/saida', methods=['GET', 'POST'])
+@app.route('/saida', methods=['GET'])
 def saida():
-    conn = get_db_connection()
+    conn = conectar()  # <<< ESSENCIAL
     c = conn.cursor()
-
-    if request.method == 'POST':
-        id_roupa = int(request.form['id'])
-        quantidade_saida = int(request.form['quantidade'])
-
-        c.execute('SELECT quantidade FROM roupas WHERE id = %s', (id_roupa,))
-        result = c.fetchone()
-
-        if result and result[0] >= quantidade_saida:
-            nova_quantidade = result[0] - quantidade_saida
-            if nova_quantidade == 0:
-                c.execute('DELETE FROM roupas WHERE id = %s', (id_roupa,))
-            else:
-                c.execute('UPDATE roupas SET quantidade = %s WHERE id = %s', (nova_quantidade, id_roupa))
-
-        conn.commit()
-        conn.close()
-        return redirect(url_for('saida'))
-
-    c.execute('SELECT * FROM roupas ORDER BY tipo, tamanho')
+    c.execute("SELECT id, tipo, tamanho, lote, validade, quantidade FROM roupas ORDER BY tipo")
     roupas = c.fetchall()
-    conn.close()
-    return render_template('saida.html', roupas=roupas)
+    roupas_por_tipo = {}
+
+    for r in roupas:
+        tipo = r[1]
+        if tipo not in roupas_por_tipo:
+            roupas_por_tipo[tipo] = []
+        roupas_por_tipo[tipo].append({
+            'id': r[0],
+            'tamanho': r[2],
+            'lote': r[3] or '-',
+            'validade': r[4].strftime('%d/%m/%Y') if r[4] else '-',
+            'quantidade': r[5]
+        })
+
+    return render_template('saida.html', roupas_por_tipo=roupas_por_tipo)
+
 
 @app.route('/saldo')
 def saldo():
