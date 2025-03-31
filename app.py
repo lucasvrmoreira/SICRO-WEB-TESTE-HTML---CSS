@@ -22,7 +22,7 @@ def entrada():
         quantidade = int(request.form['quantidade'])
         lote = request.form['lote']
         validade_str = request.form['validade']
-        validade = datetime.strptime(validade_str, '%d/%m/%Y').date() if validade_str else None
+        validade = datetime.strptime(validade_str, '%Y-%m-%d').date() if validade_str else None
         data_entrada = datetime.now().date()
 
         conn = get_db_connection()
