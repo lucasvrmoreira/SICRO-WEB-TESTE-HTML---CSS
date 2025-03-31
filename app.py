@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import psycopg2
 from datetime import datetime
 import os
-from database import conectar # type: ignore
+
 
 app = Flask(__name__)
 
@@ -59,7 +59,7 @@ def entrada():
 
 @app.route('/saida', methods=['GET'])
 def saida():
-    conn = conectar()  # <<< ESSENCIAL
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT id, tipo, tamanho, lote, validade, quantidade FROM roupas ORDER BY tipo")
     roupas = c.fetchall()
