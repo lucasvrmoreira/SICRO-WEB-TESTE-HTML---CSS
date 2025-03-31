@@ -121,14 +121,19 @@ def confirmar_saida():
         c = conn.cursor()
 
         for roupa in roupas:
+            # Atualiza a quantidade
             c.execute('''
                 UPDATE roupas
                 SET quantidade = quantidade - %s
                 WHERE id = %s AND quantidade >= %s
             ''', (roupa['quantidade'], roupa['id'], roupa['quantidade']))
 
+        # Remove os registros que ficaram com quantidade 0
+        c.execute("DELETE FROM roupas WHERE quantidade <= 0")
+
         conn.commit()
         conn.close()
+
     return redirect('/')
 
 
