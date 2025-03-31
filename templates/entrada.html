@@ -91,7 +91,7 @@ function atualizarCampos() {
     opt.value = 'Padrão';
     opt.textContent = 'Padrão';
     tamanhoSelect.appendChild(opt);
-    tamanhoSelect.disabled = true;
+    tamanhoSelect.readOnly = true;
   } else if (tipo in tamanhosPorTipo) {
     const tamanhos = tamanhosPorTipo[tipo];
     const optDefault = document.createElement("option");
