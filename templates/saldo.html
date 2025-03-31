@@ -2,58 +2,64 @@
 
 {% block content %}
 <div class="container mt-5">
-  <h2 class="mb-4 fw-bold">Saldo de Roupas</h2>
+  <h2 class="text-dark fw-bold mb-4">Saldo de Roupas</h2>
 
   <div class="row">
-    <div class="col-3">
-      <ul class="list-group">
-        {% for tipo in roupas_por_tipo.keys() %}
-        <li class="list-group-item">
-          <a class="text-decoration-none fw-medium" href="#{{ tipo | replace(' ', '_') }}">
-            <i class="bi bi-tag-fill"></i> {{ tipo }}
+    <div class="col-md-3">
+      <div class="list-group">
+        {% for tipo in tipos_unicos %}
+          <a href="#" class="list-group-item list-group-item-action" onclick="mostrarTabela('{{ tipo }}')">
+            <i class="bi bi-tag-fill text-primary"></i> {{ tipo }}
           </a>
-        </li>
         {% endfor %}
-      </ul>
+      </div>
     </div>
 
-    <div class="col-9">
-      {% for tipo, itens in roupas_por_tipo.items() %}
-      <div id="{{ tipo | replace(' ', '_') }}" class="mb-5">
-        <h4 class="fw-semibold">Saldo de: {{ tipo }}</h4>
-        <table class="table table-bordered table-hover text-center align-middle">
-          <thead class="table-primary">
-            <tr>
-              <th>Tamanho</th>
-              <th>Lote</th>
-              <th>Validade</th>
-              <th>Quantidade</th>
-              <th>Data Entrada</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in itens %}
-            <tr>
-              <td>{{ item.tamanho }}</td>
-              <td>{{ item.lote }}</td>
-              <td>{{ item.validade }}</td>
-              <td>
-                <span class="badge bg-success fs-6">{{ item.quantidade }}</span>
-              </td>
-              <td>{{ item.data_entrada }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+    <div class="col-md-9" id="tabelasContainer">
+      {% for tipo, roupas in roupas_por_tipo.items() %}
+        <div class="tabela-tipo" id="tabela-{{ tipo }}" style="display: none;">
+          <h4 class="fw-semibold">Saldo de: {{ tipo }}</h4>
+          <table class="table table-bordered table-hover mt-2">
+            <thead class="table-primary">
+              <tr>
+                <th>Tamanho</th>
+                <th>Lote</th>
+                <th>Validade</th>
+                <th>Quantidade</th>
+                <th>Data Entrada</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for roupa in roupas %}
+                <tr>
+                  <td>{{ roupa.tamanho }}</td>
+                  <td>{{ roupa.lote }}</td>
+                  <td>{{ roupa.validade }}</td>
+                  <td><span class="badge bg-success">{{ roupa.quantidade }}</span></td>
+                  <td>{{ roupa.data_entrada }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       {% endfor %}
     </div>
   </div>
 
-  <div class="text-start mt-4">
-    <a href="/" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Voltar ao Início
-    </a>
-  </div>
+  <a href="/" class="btn btn-outline-secondary mt-4">
+    <i class="bi bi-arrow-left"></i> Voltar ao Início
+  </a>
 </div>
+
+<script>
+  function mostrarTabela(tipo) {
+    const tabelas = document.querySelectorAll('.tabela-tipo');
+    tabelas.forEach(tabela => tabela.style.display = 'none');
+    
+    const tabelaSelecionada = document.getElementById('tabela-' + tipo);
+    if (tabelaSelecionada) {
+      tabelaSelecionada.style.display = 'block';
+    }
+  }
+</script>
 {% endblock %}
