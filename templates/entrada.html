@@ -1,68 +1,81 @@
+<!-- entrada.html -->
+
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-5">
     <h2 class="mb-4">Entrada de Roupas</h2>
     <form method="POST" action="/entrada">
         <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col">
                 <label for="tipo" class="form-label">Tipo de Roupa</label>
-                <input type="text" class="form-control" id="tipo" name="tipo" required>
+                <select class="form-select" id="tipo" name="tipo" required onchange="atualizarCampos()">
+                    <option value="">Selecione</option>
+                    <option value="Macacão Azul">Macacão Azul</option>
+                    <option value="Bota Azul">Bota Azul</option>
+                    <option value="Óculos">Óculos</option>
+                    <option value="Panos">Panos</option>
+                    <option value="Jaleco">Jaleco</option>
+                    <option value="Camisa">Camisa</option>
+                    <option value="Calça">Calça</option>
+                </select>
             </div>
-            <div class="col-md-4">
+            <div class="col">
                 <label for="tamanho" class="form-label">Tamanho</label>
                 <input type="text" class="form-control" id="tamanho" name="tamanho" required>
             </div>
-            <div class="col-md-4">
+            <div class="col">
                 <label for="categoria" class="form-label">Categoria</label>
-                <input type="text" class="form-control" id="categoria" name="categoria" required>
+                <input type="text" class="form-control" id="categoria" name="categoria" readonly required>
             </div>
         </div>
+
         <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col">
                 <label for="quantidade" class="form-label">Quantidade</label>
-                <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" required>
+                <input type="number" class="form-control" id="quantidade" name="quantidade" required min="1">
             </div>
-            <div class="col-md-4">
+            <div class="col">
                 <label for="lote" class="form-label">Lote</label>
                 <input type="text" class="form-control" id="lote" name="lote">
             </div>
-            <div class="col-md-4">
+            <div class="col">
                 <label for="validade" class="form-label">Validade</label>
                 <input type="text" class="form-control" id="validade" name="validade" placeholder="dd/mm/aaaa">
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Registrar Entrada</button>
-        <a href="/" class="btn btn-secondary">Cancelar</a>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Registrar Entrada</button>
+            <a href="/" class="btn btn-secondary">Cancelar</a>
+        </div>
     </form>
 </div>
 
 <script>
-    const tipoInput = document.getElementById('tipo');
+function atualizarCampos() {
+    const tipo = document.getElementById('tipo').value;
     const categoriaInput = document.getElementById('categoria');
     const tamanhoInput = document.getElementById('tamanho');
 
-    tipoInput.addEventListener('change', function () {
-        const tipo = tipoInput.value.trim().toLowerCase();
+    const estereis = ['Macacão Azul', 'Bota Azul', 'Óculos', 'Panos'];
+    const naoEstereis = ['Jaleco', 'Camisa', 'Calça'];
 
-        const estereis = ['macacão azul', 'bota azul', 'óculos', 'panos'];
-        const naoEstereis = ['jaleco', 'camisa', 'calça'];
+    if (estereis.includes(tipo)) {
+        categoriaInput.value = 'Estéril';
+    } else if (naoEstereis.includes(tipo)) {
+        categoriaInput.value = 'Não Estéril';
+    } else {
+        categoriaInput.value = '';
+    }
 
-        // Define a categoria automaticamente
-        if (estereis.includes(tipo)) {
-            categoriaInput.value = 'Estéril';
-        } else if (naoEstereis.includes(tipo)) {
-            categoriaInput.value = 'Não Estéril';
-        } else {
-            categoriaInput.value = '';
-        }
-
-        // Define o tamanho automaticamente
-        if (tipo === 'óculos' || tipo === 'panos') {
-            tamanhoInput.value = 'Padrão';
-        } else {
-            tamanhoInput.value = '';
-        }
-    });
+    if (tipo === 'Óculos' || tipo === 'Panos') {
+        tamanhoInput.value = 'Padrão';
+        tamanhoInput.readOnly = true;
+    } else {
+        tamanhoInput.value = '';
+        tamanhoInput.readOnly = false;
+    }
+}
 </script>
 {% endblock %}
