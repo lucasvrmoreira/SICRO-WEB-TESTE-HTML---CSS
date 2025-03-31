@@ -2,57 +2,67 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2 class="mb-4">Entrada de Roupas</h2>
-  <form method="POST" action="/entrada">
-    <div class="row mb-3">
-      <div class="col-md-4">
-        <label for="tipo" class="form-label">Tipo de Roupa</label>
-        <input type="text" class="form-control" name="tipo" id="tipo" required>
-      </div>
-      <div class="col-md-4">
-        <label for="tamanho" class="form-label">Tamanho</label>
-        <input type="text" class="form-control" name="tamanho" id="tamanho" required>
-      </div>
-      <div class="col-md-4">
-        <label for="categoria" class="form-label">Categoria</label>
-        <input type="text" class="form-control" name="categoria" id="categoria" required>
-      </div>
-    </div>
-
-    <div class="row mb-3">
-      <div class="col-md-4">
-        <label for="quantidade" class="form-label">Quantidade</label>
-        <input type="number" class="form-control" name="quantidade" id="quantidade" required>
-      </div>
-      <div class="col-md-4">
-        <label for="lote" class="form-label">Lote</label>
-        <input type="text" class="form-control" name="lote" id="lote">
-      </div>
-      <div class="col-md-4">
-        <label for="validade" class="form-label">Validade</label>
-        <input type="text" class="form-control" name="validade" id="validade" placeholder="dd/mm/aaaa">
-      </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Registrar Entrada</button>
-    <a href="/" class="btn btn-secondary">Cancelar</a>
-  </form>
+    <h2 class="mb-4">Entrada de Roupas</h2>
+    <form method="POST" action="/entrada">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="tipo" class="form-label">Tipo de Roupa</label>
+                <input type="text" class="form-control" id="tipo" name="tipo" required>
+            </div>
+            <div class="col-md-4">
+                <label for="tamanho" class="form-label">Tamanho</label>
+                <input type="text" class="form-control" id="tamanho" name="tamanho" required>
+            </div>
+            <div class="col-md-4">
+                <label for="categoria" class="form-label">Categoria</label>
+                <input type="text" class="form-control" id="categoria" name="categoria" required>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="quantidade" class="form-label">Quantidade</label>
+                <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" required>
+            </div>
+            <div class="col-md-4">
+                <label for="lote" class="form-label">Lote</label>
+                <input type="text" class="form-control" id="lote" name="lote">
+            </div>
+            <div class="col-md-4">
+                <label for="validade" class="form-label">Validade</label>
+                <input type="text" class="form-control" id="validade" name="validade" placeholder="dd/mm/aaaa">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Registrar Entrada</button>
+        <a href="/" class="btn btn-secondary">Cancelar</a>
+    </form>
 </div>
 
-<!-- Script de máscara -->
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const validadeInput = document.getElementById("validade");
-    validadeInput.addEventListener("input", function (e) {
-      let v = validadeInput.value.replace(/\D/g, '').slice(0, 8);
-      if (v.length >= 5) {
-        validadeInput.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
-      } else if (v.length >= 3) {
-        validadeInput.value = v.slice(0, 2) + '/' + v.slice(2);
-      } else {
-        validadeInput.value = v;
-      }
+    const tipoInput = document.getElementById('tipo');
+    const categoriaInput = document.getElementById('categoria');
+    const tamanhoInput = document.getElementById('tamanho');
+
+    tipoInput.addEventListener('change', function () {
+        const tipo = tipoInput.value.trim().toLowerCase();
+
+        const estereis = ['macacão azul', 'bota azul', 'óculos', 'panos'];
+        const naoEstereis = ['jaleco', 'camisa', 'calça'];
+
+        // Define a categoria automaticamente
+        if (estereis.includes(tipo)) {
+            categoriaInput.value = 'Estéril';
+        } else if (naoEstereis.includes(tipo)) {
+            categoriaInput.value = 'Não Estéril';
+        } else {
+            categoriaInput.value = '';
+        }
+
+        // Define o tamanho automaticamente
+        if (tipo === 'óculos' || tipo === 'panos') {
+            tamanhoInput.value = 'Padrão';
+        } else {
+            tamanhoInput.value = '';
+        }
     });
-  });
 </script>
 {% endblock %}
