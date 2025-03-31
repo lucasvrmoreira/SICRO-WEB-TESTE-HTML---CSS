@@ -110,6 +110,26 @@ def saldo():
     conn.close()
     return render_template('saldo.html', roupas_por_tipo=roupas_por_tipo)
 
+@app.route('/confirmar_saida', methods=['POST'])
+def confirmar_saida():
+    itens = request.form.get('itens')
+    if itens:
+        import json
+        roupas = json.loads(itens)
+
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        for roupa in roupas:
+            c.execute('''
+                UPDATE roupas
+                SET quantidade = quantidade - %s
+                WHERE id = %s AND quantidade >= %s
+            ''', (roupa['quantidade'], roupa['id'], roupa['quantidade']))
+
+        conn.commit()
+        conn.close()
+    return redirect('/')
 
 
 if __name__ == '__main__':
