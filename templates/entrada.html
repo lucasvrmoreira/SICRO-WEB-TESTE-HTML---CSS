@@ -20,7 +20,9 @@
             </div>
             <div class="col">
                 <label for="tamanho" class="form-label">Tamanho</label>
-                <input type="text" class="form-control" id="tamanho" name="tamanho" required>
+                <select class="form-select" id="tamanho" name="tamanho" required>
+                    <option value="">Selecione o tamanho</option>
+                </select>
             </div>
             <div class="col">
                 <label for="categoria" class="form-label">Categoria</label>
@@ -40,7 +42,6 @@
             <div class="col">
                 <label for="validade" class="form-label">Validade</label>
                 <input type="date" class="form-control" id="validade" name="validade">
-
             </div>
         </div>
 
@@ -55,7 +56,7 @@
 function atualizarCampos() {
     const tipo = document.getElementById('tipo').value;
     const categoriaInput = document.getElementById('categoria');
-    const tamanhoInput = document.getElementById('tamanho');
+    const tamanhoSelect = document.getElementById('tamanho');
 
     const estereis = ['Macacão Azul', 'Bota Azul', 'Óculos', 'Panos'];
     const naoEstereis = ['Jaleco', 'Camisa', 'Calça'];
@@ -68,12 +69,28 @@ function atualizarCampos() {
         categoriaInput.value = '';
     }
 
-    if (tipo === 'Óculos' || tipo === 'Panos') {
-        tamanhoInput.value = 'Padrão';
-        tamanhoInput.readOnly = true;
-    } else {
-        tamanhoInput.value = '';
-        tamanhoInput.readOnly = false;
+    // Define tamanhos possíveis por tipo
+    const tamanhosPorTipo = {
+        'Macacão Azul': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
+        'Bota Azul': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
+        'Jaleco': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
+        'Camisa': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
+        'Calça': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
+        'Óculos': ['Padrão'],
+        'Panos': ['Padrão']
+    };
+
+    // Limpa o campo tamanho
+    tamanhoSelect.innerHTML = '<option value="">Selecione o tamanho</option>';
+
+    // Preenche conforme tipo
+    if (tipo in tamanhosPorTipo) {
+        tamanhosPorTipo[tipo].forEach(tam => {
+            const opt = document.createElement("option");
+            opt.value = tam;
+            opt.textContent = tam;
+            tamanhoSelect.appendChild(opt);
+        });
     }
 }
 </script>
