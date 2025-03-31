@@ -5,51 +5,57 @@
   <h2 class="text-primary text-center">Entrada de Roupas</h2>
   <form method="POST" action="{{ url_for('entrada') }}">
     <div class="row mb-3">
-      <div class="col">
+      <div class="col-md-6">
         <label for="tipo" class="form-label">Tipo de Roupa</label>
-        <select id="tipo" name="tipo" class="form-select" onchange="atualizarCampos()" required>
+        <select class="form-select" id="tipo" name="tipo" required onchange="atualizarCampos()">
           <option value="">Selecione</option>
-          <option>Macacão Azul</option>
-          <option>Bota Azul</option>
-          <option>Óculos</option>
-          <option>Panos</option>
-          <option>Jaleco</option>
-          <option>Camisa</option>
-          <option>Calça</option>
+          <option value="Macacão Azul">Macacão Azul</option>
+          <option value="Bota Azul">Bota Azul</option>
+          <option value="Óculos">Óculos</option>
+          <option value="Panos">Panos</option>
+          <option value="Jaleco">Jaleco</option>
+          <option value="Camisa">Camisa</option>
+          <option value="Calça">Calça</option>
         </select>
       </div>
-      <div class="col">
+      <div class="col-md-6">
         <label for="tamanho" class="form-label">Tamanho</label>
-        <select id="tamanho" name="tamanho" class="form-select" required>
+        <select class="form-select" id="tamanho" name="tamanho" required>
           <option value="">Selecione o tamanho</option>
         </select>
       </div>
     </div>
 
     <div class="row mb-3">
-      <div class="col">
+      <div class="col-md-6">
         <label for="categoria" class="form-label">Categoria</label>
-        <input type="text" id="categoria" name="categoria" class="form-control" readonly required>
+        <input type="text" class="form-control" id="categoria" name="categoria" readonly>
       </div>
-      <div class="col">
+      <div class="col-md-6">
         <label for="quantidade" class="form-label">Quantidade</label>
-        <input type="number" id="quantidade" name="quantidade" class="form-control" required>
+        <input type="number" class="form-control" id="quantidade" name="quantidade" required min="1">
       </div>
     </div>
 
     <div class="row mb-3">
-      <div class="col">
+      <div class="col-md-6">
         <label for="lote" class="form-label">Lote</label>
-        <input type="text" id="lote" name="lote" class="form-control">
+        <input type="text" class="form-control" id="lote" name="lote">
       </div>
-      <div class="col">
+      <div class="col-md-6">
         <label for="validade" class="form-label">Validade</label>
-        <input type="date" id="validade" name="validade" class="form-control">
+        <input type="date" class="form-control" id="validade" name="validade">
       </div>
     </div>
 
-    <button type="submit" class="btn btn-success w-100">Registrar Entrada</button>
-    <a href="/" class="btn btn-outline-secondary w-100 mt-2">Voltar ao Início</a>
+    <div class="d-grid gap-2">
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="bi bi-box-arrow-in-down"></i> Confirmar Entrada
+      </button>
+      <a href="/" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar ao Início
+      </a>
+    </div>
   </form>
 </div>
 
@@ -70,22 +76,28 @@ function atualizarCampos() {
     categoriaInput.value = '';
   }
 
-  // Define tamanhos possíveis por tipo
   const tamanhosPorTipo = {
     'Macacão Azul': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
     'Bota Azul': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
     'Jaleco': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
     'Camisa': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
-    'Calça': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4'],
-    'Óculos': ['Padrão'],
-    'Panos': ['Padrão']
+    'Calça': ['PP', 'P', 'M', 'G', 'GG', 'G3', 'G4']
   };
 
-  // Limpa o campo tamanho
   tamanhoSelect.innerHTML = '';
 
-  if (tipo in tamanhosPorTipo) {
+  if (tipo === 'Óculos' || tipo === 'Panos') {
+    const opt = document.createElement("option");
+    opt.value = 'Padrão';
+    opt.textContent = 'Padrão';
+    tamanhoSelect.appendChild(opt);
+    tamanhoSelect.disabled = true;
+  } else if (tipo in tamanhosPorTipo) {
     const tamanhos = tamanhosPorTipo[tipo];
+    const optDefault = document.createElement("option");
+    optDefault.value = '';
+    optDefault.textContent = 'Selecione o tamanho';
+    tamanhoSelect.appendChild(optDefault);
 
     tamanhos.forEach(tam => {
       const opt = document.createElement("option");
@@ -93,13 +105,7 @@ function atualizarCampos() {
       opt.textContent = tam;
       tamanhoSelect.appendChild(opt);
     });
-
-    if (tipo === 'Óculos' || tipo === 'Panos') {
-      tamanhoSelect.value = 'Padrão';
-      tamanhoSelect.disabled = true;
-    } else {
-      tamanhoSelect.disabled = false;
-    }
+    tamanhoSelect.disabled = false;
   } else {
     const opt = document.createElement("option");
     opt.value = "";
