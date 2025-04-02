@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="text-center text-info mb-4">📄 Ordens Atendidas</h2>
+
+    {% if ordens %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-info">
+                <tr>
+                    <th scope="col">Número da Ordem</th>
+                    <th scope="col">Total de Itens</th>
+                    <th scope="col">Data da Solicitação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ordem in ordens %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('detalhes_ordem', numero_ordem=ordem[0]) }}" class="text-decoration-none">
+                            {{ ordem[0] }}
+                        </a>
+                    </td>
+                    <td>{{ ordem[1] }}</td>
+                    <td>{{ ordem[2].strftime('%d/%m/%Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center mt-5">
+        Nenhuma ordem atendida encontrada.
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">← Voltar ao Início</a>
+    </div>
+</div>
+{% endblock %}

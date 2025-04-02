@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h3 class="text-center mb-4 text-primary">Detalhes da Ordem #{{ numero_ordem }}</h3>
+
+  {% if detalhes %}
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Tipo</th>
+          <th>Tamanho</th>
+          <th>Lote</th>
+          <th>Validade</th>
+          <th>Quantidade</th>
+          <th>Data da Saída</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in detalhes %}
+        <tr>
+          <td>{{ item[0] }}</td>
+          <td>{{ item[1] }}</td>
+          <td>{{ item[2] or '-' }}</td>
+          <td>{{ item[3].strftime('%d/%m/%Y') if item[3] else '-' }}</td>
+          <td>{{ item[4] }}</td>
+          <td>{{ item[5].strftime('%d/%m/%Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-info text-center mt-4">
+    Nenhum item registrado para esta ordem.
+  </div>
+  {% endif %}
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('ordens_atendidas') }}" class="btn btn-outline-secondary">← Voltar</a>
+  </div>
+</div>
+{% endblock %}

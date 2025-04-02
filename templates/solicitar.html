@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="text-center mb-4 text-primary">Solicitação de Roupas</h2>
+<p class="text-center">Clique no tipo de roupa, selecione as opções e adicione à solicitação.</p>
+
+<div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+  {% for tipo in ['Macacão Azul', 'Bota Azul', 'Óculos', 'Panos', 'Jaleco', 'Camisa', 'Calça'] %}
+    <button type="button" class="btn btn-outline-primary btn-tipo" data-tipo="{{ tipo }}">
+      <i class="bi bi-tag"></i> {{ tipo }}
+    </button>
+  {% endfor %}
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="border p-3 rounded bg-white shadow-sm">
+      <h5><strong>Solicitação:</strong> <span id="tipoSelecionadoTexto">Selecione um tipo</span></h5>
+      <p id="saldo-info" class="text-muted small"></p>
+
+      <form id="form-adicionar">
+        <input type="hidden" id="tipoSelecionado" name="tipo">
+
+        <div class="mb-3">
+          <label for="tamanho" class="form-label">Tamanho</label>
+          <select id="tamanho" class="form-select" required>
+            <option selected disabled>Selecione o tamanho</option>
+            <option>PP</option><option>P</option><option>M</option><option>G</option>
+            <option>GG</option><option>G3</option><option>G4</option><option>Padrão</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="categoria" class="form-label">Categoria</label>
+          <input type="text" id="categoria" class="form-control" readonly>
+        </div>
+
+        <div class="mb-3">
+          <label for="quantidade" class="form-label">Quantidade</label>
+          <input type="number" id="quantidade" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">
+          <i class="bi bi-plus-circle"></i> Adicionar à Solicitação
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="border p-3 rounded bg-white shadow-sm">
+      <h5 class="mb-3"><strong>Roupas Solicitadas</strong></h5>
+      <ul id="lista-solicitacoes" class="list-group mb-3"></ul>
+
+      <button id="enviarSolicitacao" class="btn btn-primary w-100 mb-2">
+        <i class="bi bi-send"></i> Enviar Solicitação
+      </button>
+      <a href="/" class="btn btn-outline-secondary w-100">← Voltar ao Início</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const roupasPorTipo = {{ roupas_por_tipo | tojson | safe }};
+  const tipoSelecionadoInput = document.getElementById("tipoSelecionado");
+  const tipoSelecionadoTexto = document.getElementById("tipoSelecionadoTexto");
+  const categoriaInput = document.getElementById("categoria");
+  const listaSolicitacoes = document.getElementById("lista-solicitacoes");
+  const saldoInfo = document.getElementById("saldo-info");
+  const solicitacoes = [];
+
+  document.querySelectorAll(".btn-tipo").forEach(button => {
+    button.addEventListener("click", () => {
+      const tipo = button.dataset.tipo;
+      tipoSelecionadoInput.value = tipo;
+      tipoSelecionadoTexto.textContent = tipo;
+      exibirSaldo(tipo);
+      categoriaInput.value = tipo === 'Panos' || tipo === 'Óculos' ? 'Estéril' : (
+        ['Macacão Azul', 'Bota Azul'].includes(tipo) ? 'Estéril' : 'Não Estéril'
+      );
+    });
+  });
+
+  document.getElementById("form-adicionar").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const tipo = tipoSelecionadoInput.value;
+    const tamanho = document.getElementById("tamanho").value;
+    const categoria = categoriaInput.value;
+    const quantidade = parseInt(document.getElementById("quantidade").value);
+
+    if (!tipo || !tamanho || !quantidade || quantidade <= 0) {
+      alert("Preencha todos os campos corretamente.");
+      return;
+    }
+
+    solicitacoes.push({ tipo, tamanho, quantidade, categoria });
+    atualizarLista();
+    this.reset();
+    document.getElementById("tamanho").selectedIndex = 0;
+  });
+
+  function atualizarLista() {
+    listaSolicitacoes.innerHTML = "";
+    solicitacoes.forEach((item, index) => {
+      const li = document.createElement("li");
+      li.className = "list-group-item d-flex justify-content-between align-items-center";
+      li.innerHTML = `
+        ${item.tipo} - ${item.tamanho} - ${item.quantidade}x - ${item.categoria}
+        <button class="btn btn-sm btn-danger" onclick="removerItem(${index})">Remover</button>
+      `;
+      listaSolicitacoes.appendChild(li);
+    });
+  }
+
+  function removerItem(index) {
+    solicitacoes.splice(index, 1);
+    atualizarLista();
+  }
+
+  document.getElementById("enviarSolicitacao").addEventListener("click", () => {
+    if (solicitacoes.length === 0) {
+      alert("Adicione ao menos uma roupa antes de enviar.");
+      return;
+    }
+
+    fetch("/solicitar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(solicitacoes)
+    })
+    .then(response => {
+      if (response.ok) {
+        alert("Solicitação enviada com sucesso!");
+        window.location.href = "/";
+      } else {
+        alert("Erro ao enviar solicitação.");
+      }
+    });
+  });
+
+  function exibirSaldo(tipo) {
+    if (!tipo || !roupasPorTipo[tipo]) {
+      saldoInfo.innerText = "";
+      return;
+    }
+
+    const tamanhos = roupasPorTipo[tipo];
+    const texto = Object.entries(tamanhos)
+      .map(([tam, qtd]) => `${tam}: ${qtd}`)
+      .join(" | ");
+    saldoInfo.innerText = "Saldo disponível: " + texto;
+  }
+</script>
+{% endblock %}

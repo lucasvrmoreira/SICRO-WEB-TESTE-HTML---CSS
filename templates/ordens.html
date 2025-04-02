@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="text-center text-warning mb-4">📦 Ordens da Produção Pendentes</h2>
+
+    {% if ordens %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-warning">
+                <tr>
+                    <th scope="col">Número da Ordem</th>
+                    <th scope="col">Quantidade Total</th>
+                    <th scope="col">Data</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ordem in ordens %}
+                <tr>
+                    <td>{{ ordem[0] }}</td>
+                    <td>{{ ordem[1] }}</td>
+                    <td>{{ ordem[2].strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('saida', numero_ordem=ordem[0]) }}" class="btn btn-success btn-sm">
+                            Atender
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center mt-5">
+        Nenhuma ordem pendente no momento.
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">← Voltar ao Início</a>
+    </div>
+</div>
+{% endblock %}

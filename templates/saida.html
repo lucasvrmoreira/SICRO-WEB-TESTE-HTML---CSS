@@ -1,126 +1,116 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<div class="container mt-5">
-  <h2 class="text-primary text-center">Saída de Roupas</h2>
-  <p class="text-center">Selecione os tipos de roupas acima, escolha os lotes e veja os itens escolhidos à direita antes de confirmar.</p>
+<div class="container mt-4">
+  <h2 class="text-primary text-center mb-4">Saída de Roupas</h2>
 
-  <div class="mb-4">
-    {% for tipo in roupas_por_tipo.keys() %}
-      <button class="btn btn-outline-primary m-1" onclick="mostrarLotes('{{ tipo }}')">
-        <i class="bi bi-tag"></i> {{ tipo }}
-      </button>
-    {% endfor %}
+  <!-- Layout dividido em 4 quadrantes -->
+  <div class="row">
+    <!-- 1. Tipos disponíveis -->
+    <div class="col-md-6">
+      <h5 class="text-center">Tipos no Estoque</h5>
+      <div id="tiposEstoque" class="d-flex flex-wrap justify-content-center mb-3">
+        {% for tipo in tipos %}
+          <button class="btn btn-outline-primary m-1" onclick="mostrarDetalhes('{{ tipo }}')">
+            {{ tipo }}
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 2. Tipos solicitados pela produção -->
+    <div class="col-md-6">
+      <h5 class="text-center">Solicitado pela Produção</h5>
+      <ul class="list-group">
+        {% for item in solicitacao %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ item.tipo }} - {{ item.tamanho }}</span>
+            <span><strong>{{ item.quantidade }}</strong></span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 
-  <div class="row">
+  <div class="row mt-4">
+    <!-- 3. Detalhes do tipo clicado -->
     <div class="col-md-6">
-      <h5 class="mb-3">Lotes disponíveis para: <span id="tipoSelecionado">Selecione um tipo</span></h5>
-      <div id="lotesDisponiveis"></div>
+      <h5 class="text-center">Lotes Disponíveis</h5>
+      <div id="detalhesTipo"></div>
     </div>
-    <div class="col-md-6">
-      <h5 class="mb-3">Roupas Selecionadas</h5>
-      <ul id="roupasSelecionadas" class="list-group mb-3"></ul>
 
-      <form method="POST" action="{{ url_for('confirmar_saida') }}">
-        <input type="hidden" name="itens" id="inputItens">
-        <button type="submit" class="btn btn-danger btn-lg w-100 mb-2">
+    <!-- 4. Resumo de seleção -->
+    <div class="col-md-6">
+      <h5 class="text-center">Resumo da Saída</h5>
+      <form method="POST">
+        <table class="table table-sm" id="resumoSaida">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Tamanho</th>
+              <th>Lote</th>
+              <th>Qtd</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <input type="hidden" name="numero_ordem" value="{{ numero_ordem }}">
+        <button type="submit" class="btn btn-success w-100">
           <i class="bi bi-check-circle"></i> Confirmar Saída
         </button>
       </form>
-
-      <a href="/" class="btn btn-outline-secondary w-100">
-        <i class="bi bi-arrow-left"></i> Voltar ao Início
-      </a>
     </div>
   </div>
 </div>
 
 <script>
   const roupas = {{ roupas | tojson | safe }};
-  const roupasPorTipo = {{ roupas_por_tipo | tojson | safe }};
-  let roupasSelecionadas = [];
+  const resumo = [];
 
-  function mostrarLotes(tipo) {
-    const lotesDiv = document.getElementById('lotesDisponiveis');
-    const tipoSelecionado = document.getElementById('tipoSelecionado');
-    lotesDiv.innerHTML = '';
-    tipoSelecionado.innerText = tipo;
+  function mostrarDetalhes(tipo) {
+    const container = document.getElementById("detalhesTipo");
+    const filtrados = roupas.filter(r => r.tipo === tipo);
 
-    const roupasDoTipo = roupasPorTipo[tipo] || [];
-
-    roupasDoTipo.forEach((roupa, index) => {
-      const card = document.createElement('div');
-      card.className = 'card mb-2';
-
-      const cardBody = document.createElement('div');
-      cardBody.className = 'card-body';
-
-      const titulo = document.createElement('h6');
-      titulo.innerHTML = `<strong>${roupa.tipo}</strong> | Tam: ${roupa.tamanho || '-'} | Lote: ${roupa.lote || '-'} | Val: ${roupa.validade || '-'} | Qtd: <span class="badge bg-success">${roupa.quantidade}</span>`;
-      cardBody.appendChild(titulo);
-
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.min = 1;
-      input.max = roupa.quantidade;
-      input.className = 'form-control my-2';
-      input.placeholder = 'Qtd a sair';
-
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-outline-primary';
-      btn.innerHTML = '<i class="bi bi-plus-circle"></i> Adicionar';
-      btn.onclick = () => adicionarRoupa(roupa, input.value);
-
-      cardBody.appendChild(input);
-      cardBody.appendChild(btn);
-      card.appendChild(cardBody);
-      lotesDiv.appendChild(card);
-    });
-  }
-
-  function adicionarRoupa(roupa, qtd) {
-    const quantidade = parseInt(qtd);
-    if (!quantidade || quantidade <= 0 || quantidade > roupa.quantidade) {
-      alert("Quantidade inválida");
+    if (filtrados.length === 0) {
+      container.innerHTML = '<p class="text-danger">Nenhum lote encontrado.</p>';
       return;
     }
 
-    roupasSelecionadas.push({
-      id: roupa.id,
-      tipo: roupa.tipo,
-      tamanho: roupa.tamanho,
-      lote: roupa.lote,
-      validade: roupa.validade,
-      quantidade: quantidade
+    let html = '<table class="table table-bordered"><thead><tr><th>Tamanho</th><th>Lote</th><th>Validade</th><th>Qtd</th><th>Selecionar</th></tr></thead><tbody>';
+    filtrados.forEach(r => {
+      html += `<tr>
+        <td>${r.tamanho}</td>
+        <td>${r.lote}</td>
+        <td>${r.validade}</td>
+        <td>${r.quantidade}</td>
+        <td>
+          <input type="number" min="1" max="${r.quantidade}" class="form-control form-control-sm" id="qtd_${r.tipo}_${r.tamanho}_${r.lote}" placeholder="Qtd">
+          <button class="btn btn-sm btn-primary mt-1" onclick="adicionarResumo('${r.tipo}', '${r.tamanho}', '${r.lote}')">
+            Adicionar
+          </button>
+        </td>
+      </tr>`;
     });
-
-    atualizarResumo();
+    html += '</tbody></table>';
+    container.innerHTML = html;
   }
 
-  function atualizarResumo() {
-    const lista = document.getElementById('roupasSelecionadas');
-    const inputHidden = document.getElementById('inputItens');
-    lista.innerHTML = '';
+  function adicionarResumo(tipo, tamanho, lote) {
+    const input = document.getElementById(`qtd_${tipo}_${tamanho}_${lote}`);
+    const qtd = parseInt(input.value);
+    if (!qtd || qtd <= 0) return alert('Informe a quantidade.');
 
-    roupasSelecionadas.forEach((r, i) => {
-      const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center';
-      li.textContent = `${r.tipo} | Tam: ${r.tamanho || '-'} | Lote: ${r.lote || '-'} | Val: ${r.validade || '-'} | Qtd: ${r.quantidade}`;
-
-      const btnRemove = document.createElement('button');
-      btnRemove.className = 'btn btn-sm btn-danger ms-2';
-      btnRemove.innerHTML = '<i class="bi bi-trash"></i>';
-      btnRemove.onclick = () => {
-        roupasSelecionadas.splice(i, 1);
-        atualizarResumo();
-      };
-
-      li.appendChild(btnRemove);
-      lista.appendChild(li);
-    });
-
-    inputHidden.value = JSON.stringify(roupasSelecionadas);
+    const tbody = document.querySelector('#resumoSaida tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="hidden" name="tipo[]" value="${tipo}">${tipo}</td>
+      <td><input type="hidden" name="tamanho[]" value="${tamanho}">${tamanho}</td>
+      <td><input type="hidden" name="lote[]" value="${lote}">${lote}</td>
+      <td><input type="hidden" name="quantidade[]" value="${qtd}">${qtd}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">Remover</button></td>
+    `;
+    tbody.appendChild(tr);
+    input.value = '';
   }
 </script>
 {% endblock %}

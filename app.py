@@ -1,11 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, flash, render_template, request, redirect, url_for
 import psycopg2
 from datetime import datetime
 import os
 import json
+from dotenv import load_dotenv
+load_dotenv()
+from flask import Flask, flash, render_template, request, redirect, url_for, jsonify
+from datetime import date
+import secrets
+
 
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(16)
 
 # Função para obter conexão segura com o banco
 def get_db_connection():
@@ -13,7 +20,13 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM ordens WHERE status = 'pendente'")
+    total_pendentes = c.fetchone()[0]
+    conn.close()
+    return render_template('index.html', total_pendentes=total_pendentes)
+
 
 @app.route('/entrada', methods=['GET', 'POST'])
 def entrada():
@@ -58,28 +71,113 @@ def entrada():
     return render_template('entrada.html')
 
 
-@app.route('/saida', methods=['GET'])
+# 3. Atualizar rota /saida com base no numero_ordem
+@app.route('/saida', methods=['GET', 'POST'])
 def saida():
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, tipo, tamanho, lote, validade, quantidade FROM roupas ORDER BY tipo")
-    roupas = c.fetchall()
-    roupas_por_tipo = {}
+    cur = conn.cursor()
 
-    for r in roupas:
-        tipo = r[1]
-        if tipo not in roupas_por_tipo:
-            roupas_por_tipo[tipo] = []
-        roupas_por_tipo[tipo].append({
-            'id': r[0],
-            'tipo': r[1],
-            'tamanho': r[2],
-            'lote': r[3] or '-',
-            'validade': r[4].strftime('%d/%m/%Y') if r[4] else '-',
-            'quantidade': r[5]
-        })
+    if request.method == 'POST':
+        numero_ordem = request.form.get('numero_ordem')
+        if not numero_ordem:
+            flash("Número da ordem não encontrado.", "danger")
+            return redirect(url_for('ordens'))
 
-    return render_template('saida.html', roupas_por_tipo=roupas_por_tipo, roupas=roupas_por_tipo)
+        tipos = request.form.getlist('tipo[]')
+        tamanhos = request.form.getlist('tamanho[]')
+        lotes = request.form.getlist('lote[]')
+        quantidades = request.form.getlist('quantidade[]')
+
+        for i in range(len(tipos)):
+            # Atualiza estoque
+            cur.execute("""
+                UPDATE roupas
+                SET quantidade = quantidade - %s
+                WHERE tipo = %s AND tamanho = %s AND lote = %s
+            """, (quantidades[i], tipos[i], tamanhos[i], lotes[i]))
+
+            # Verifica validade da roupa
+            cur.execute("""
+                SELECT validade FROM roupas
+                WHERE tipo = %s AND tamanho = %s AND lote = %s
+            """, (tipos[i], tamanhos[i], lotes[i]))
+            validade = cur.fetchone()
+            validade = validade[0] if validade else None
+
+            # Insere no histórico de saída
+            cur.execute("""
+                INSERT INTO saidas (numero_ordem, tipo, tamanho, lote, validade, quantidade)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (numero_ordem, tipos[i], tamanhos[i], lotes[i], validade, quantidades[i]))
+
+            # Remove do estoque se zerar
+            cur.execute("""
+                SELECT quantidade FROM roupas
+                WHERE tipo = %s AND tamanho = %s AND lote = %s
+            """, (tipos[i], tamanhos[i], lotes[i]))
+            restante = cur.fetchone()
+
+            if restante and restante[0] <= 0:
+                cur.execute("""
+                    DELETE FROM roupas
+                    WHERE tipo = %s AND tamanho = %s AND lote = %s
+                """, (tipos[i], tamanhos[i], lotes[i]))
+
+        # Atualiza o status da ordem
+        cur.execute("""
+            UPDATE ordens
+            SET status = 'atendido'
+            WHERE numero_ordem = %s
+        """, (numero_ordem,))
+
+        conn.commit()
+        conn.close()
+
+        flash("Ordem atendida com sucesso!", "success")
+        return redirect(url_for('index'))
+
+    # GET request
+    numero_ordem = request.args.get('numero_ordem')
+    if not numero_ordem:
+        flash("Número da ordem não encontrado.", "danger")
+        return redirect(url_for('ordens'))
+
+    # Consulta as solicitações da ordem
+    cur.execute("""
+        SELECT tipo, tamanho, quantidade FROM ordens
+        WHERE numero_ordem = %s
+    """, (numero_ordem,))
+    rows = cur.fetchall()
+
+    if not rows:
+        flash("Número da ordem não encontrado.", "danger")
+        return redirect(url_for('ordens'))
+
+    solicitacao = [{'tipo': r[0], 'tamanho': r[1], 'quantidade': r[2]} for r in rows]
+
+    # Consulta o estoque completo
+    cur.execute("SELECT tipo, tamanho, lote, validade, quantidade FROM roupas")
+    rows = cur.fetchall()
+    roupas = [{
+        'tipo': r[0],
+        'tamanho': r[1],
+        'lote': r[2],
+        'validade': r[3].strftime('%Y-%m-%d') if r[3] else '',
+        'quantidade': r[4]
+    } for r in rows]
+
+    tipos_unicos = sorted(set([r['tipo'] for r in roupas]))
+    conn.close()
+
+    return render_template('saida.html', roupas=roupas, tipos=tipos_unicos, solicitacao=solicitacao, numero_ordem=numero_ordem)
+
+
+
+
+
+
+
+
 
 
 
@@ -108,8 +206,6 @@ def saldo():
     return render_template('saldo.html', roupas_por_tipo=roupas_por_tipo)
 
 
-    conn.close()
-    return render_template('saldo.html', roupas_por_tipo=roupas_por_tipo)
 
 @app.route('/confirmar_saida', methods=['POST'])
 def confirmar_saida():
@@ -138,6 +234,141 @@ def confirmar_saida():
     cur.close()
     conn.close()
     return redirect(url_for('saida'))
+
+
+# Rotas da Produção
+
+
+# 1. Backend da tela de solicitação de roupas (produção)
+@app.route('/solicitar', methods=['GET', 'POST'])
+def solicitar():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Monta dicionário com saldos por tipo e tamanho
+    cur.execute("SELECT tipo, tamanho, SUM(quantidade) FROM roupas GROUP BY tipo, tamanho")
+    rows = cur.fetchall()
+
+    roupas_por_tipo = {}
+    for tipo, tamanho, quantidade in rows:
+        if tipo not in roupas_por_tipo:
+            roupas_por_tipo[tipo] = {}
+        roupas_por_tipo[tipo][tamanho] = quantidade
+
+    if request.method == 'POST':
+        solicitacoes = request.get_json()
+        if not solicitacoes:
+            return jsonify({'status': 'error', 'message': 'Solicitações vazias'}), 400
+
+        # Obtem o maior número de ordem atual e soma 1
+        cur.execute("SELECT MAX(CAST(numero_ordem AS INTEGER)) FROM ordens")
+        ultimo = cur.fetchone()[0]
+        novo_numero = (int(ultimo) + 1) if ultimo else 1
+        numero_ordem = str(novo_numero)
+
+        for item in solicitacoes:
+            cur.execute("""
+                INSERT INTO ordens (tipo, tamanho, quantidade, categoria, status, data_solicitacao, numero_ordem)
+                VALUES (%s, %s, %s, %s, 'pendente', %s, %s)
+            """, (
+                item['tipo'],
+                item['tamanho'],
+                item['quantidade'],
+                item['categoria'],
+                date.today(),
+                numero_ordem
+            ))
+
+        conn.commit()
+        conn.close()
+        return jsonify({'status': 'success'})
+
+    conn.close()
+    return render_template('solicitar.html', roupas_por_tipo=roupas_por_tipo)
+
+
+
+# 2. Tela de Ordens Pendentes
+@app.route('/ordens')
+def ordens():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT numero_ordem, SUM(quantidade), MAX(data_solicitacao)
+        FROM ordens
+        WHERE status = 'pendente'
+        GROUP BY numero_ordem
+        ORDER BY MAX(data_solicitacao) DESC
+    """)
+    
+    ordens = cur.fetchall()
+    conn.close()
+    return render_template('ordens.html', ordens=ordens)
+
+
+# Rota: API – Retorna saldo por tipo
+@app.route('/api/saldo/<tipo>')
+def saldo_por_tipo(tipo):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT SUM(quantidade) FROM roupas WHERE tipo = %s", (tipo,))
+    total = cur.fetchone()[0] or 0
+    conn.close()
+    return {'saldo': total}
+
+@app.route('/api/saldo_por_tamanho/<tipo>')
+def saldo_por_tamanho(tipo):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT tamanho, SUM(quantidade)
+        FROM roupas
+        WHERE tipo = %s
+        GROUP BY tamanho
+        ORDER BY tamanho
+    """, (tipo,))
+    rows = cur.fetchall()
+    conn.close()
+
+    return {t[0]: t[1] for t in rows}
+
+@app.template_filter('datetimeformat')
+def datetimeformat(value, format='%d/%m/%Y'):
+    return value.strftime(format)
+
+
+@app.route('/ordens_atendidas')
+def ordens_atendidas():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT numero_ordem, SUM(quantidade), MAX(data_solicitacao)
+        FROM ordens
+        WHERE status = 'atendido'
+        GROUP BY numero_ordem
+        ORDER BY MAX(data_solicitacao) DESC
+    """)
+    ordens = cur.fetchall()
+    conn.close()
+    return render_template('ordens_atendidas.html', ordens=ordens)
+
+
+@app.route('/ordem/<numero_ordem>')
+def detalhes_ordem(numero_ordem):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT tipo, tamanho, lote, validade, quantidade, data_saida
+        FROM saidas
+        WHERE numero_ordem = %s
+    """, (numero_ordem,))
+    detalhes = cur.fetchall()
+    conn.close()
+
+    return render_template('detalhes_ordem.html', numero_ordem=numero_ordem, detalhes=detalhes)
+
+
 
 
 if __name__ == '__main__':

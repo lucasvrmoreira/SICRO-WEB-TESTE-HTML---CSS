@@ -1,10 +1,24 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="text-center">
-    <h1 class="text-primary fw-bold mb-2" style="letter-spacing: 1px;">SICRO</h1>
-    <p class="text-muted mb-5 fs-5">Sistema Integrado de Controle de Roupas</p>
+<div class="container py-5">
+    <h2 class="text-center mb-5 text-primary">SICRO - Sistema de Controle de Roupas</h2>
 
-    <div class="row justify-content-center g-4">
+    <div class="row g-4 justify-content-center">
+        <!-- Solicitar Roupas -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="bi bi-cart-plus fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Solicitar Roupas</h5>
+                    <p class="card-text text-muted">Produção solicita roupas disponíveis</p>
+                    <a href="{{ url_for('solicitar') }}" class="btn btn-primary w-100 mt-2">Solicitar</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entrada de Roupas -->
         <div class="col-md-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
@@ -12,12 +26,13 @@
                         <i class="bi bi-box-arrow-in-down fs-1 text-success"></i>
                     </div>
                     <h5 class="card-title">Entrada de Roupas</h5>
-                    <p class="card-text text-muted">Registrar novos itens no estoque</p>
-                    <a href="/entrada" class="btn btn-success w-100 mt-2">Acessar</a>
+                    <p class="card-text text-muted">Cadastrar novas roupas no sistema</p>
+                    <a href="{{ url_for('entrada') }}" class="btn btn-success w-100 mt-2">Registrar Entrada</a>
                 </div>
             </div>
         </div>
 
+        <!-- Saída de Roupas -->
         <div class="col-md-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
@@ -25,21 +40,50 @@
                         <i class="bi bi-box-arrow-up fs-1 text-danger"></i>
                     </div>
                     <h5 class="card-title">Saída de Roupas</h5>
-                    <p class="card-text text-muted">Dar baixa em roupas utilizadas</p>
-                    <a href="/saida" class="btn btn-danger w-100 mt-2">Acessar</a>
+                    <p class="card-text text-muted">Dar baixa no estoque após entrega</p>
+                    <a href="{{ url_for('saida') }}" class="btn btn-danger w-100 mt-2">Registrar Saída</a>
                 </div>
             </div>
         </div>
 
+        <!-- Ver Saldo -->
         <div class="col-md-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <div class="mb-3">
-                        <i class="bi bi-clipboard-data fs-1 text-primary"></i>
+                        <i class="bi bi-clipboard-data fs-1 text-secondary"></i>
                     </div>
                     <h5 class="card-title">Ver Saldo</h5>
-                    <p class="card-text text-muted">Consultar o estoque disponível</p>
-                    <a href="/saldo" class="btn btn-primary w-100 mt-2">Acessar</a>
+                    <p class="card-text text-muted">Visualizar saldo de roupas por tipo</p>
+                    <a href="{{ url_for('saldo') }}" class="btn btn-secondary w-100 mt-2">Ver Saldo</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ordens Pendentes -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="bi bi-clock-history fs-1 text-warning"></i>
+                    </div>
+                    <h5 class="card-title">Ordens Pendentes</h5>
+                    <p class="card-text text-muted">Visualizar e atender solicitações da produção</p>
+                    <a href="{{ url_for('ordens') }}" class="btn btn-warning w-100 mt-2">Ver Ordens</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ordens Atendidas -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="bi bi-check-circle fs-1 text-info"></i>
+                    </div>
+                    <h5 class="card-title">Ordens Atendidas</h5>
+                    <p class="card-text text-muted">Histórico de solicitações concluídas</p>
+                    <a href="{{ url_for('ordens_atendidas') }}" class="btn btn-info w-100 mt-2">Visualizar</a>
                 </div>
             </div>
         </div>
