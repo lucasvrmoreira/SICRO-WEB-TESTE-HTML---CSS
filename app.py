@@ -172,15 +172,6 @@ def saida():
     return render_template('saida.html', roupas=roupas, tipos=tipos_unicos, solicitacao=solicitacao, numero_ordem=numero_ordem)
 
 
-
-
-
-
-
-
-
-
-
 @app.route('/saldo')
 def saldo():
     conn = get_db_connection()
@@ -367,8 +358,6 @@ def detalhes_ordem(numero_ordem):
     conn.close()
 
     return render_template('detalhes_ordem.html', numero_ordem=numero_ordem, detalhes=detalhes)
-
-
 
 
 if __name__ == '__main__':
